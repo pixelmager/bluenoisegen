@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bluenoise_voidncluster", "bluenoise_voidncluster\bluenoise_voidncluster.vcxproj", "{9306B1EF-42C3-4EBC-86D7-A689FB967709}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bluenoise_forcedrandom", "bluenoise_forcedrandom\bluenoise_forcedrandom.vcxproj", "{3A0B91B8-FD20-42FF-85BF-9F8A39DEE39D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9306B1EF-42C3-4EBC-86D7-A689FB967709}.Debug|x64.ActiveCfg = Debug|x64
+		{9306B1EF-42C3-4EBC-86D7-A689FB967709}.Debug|x64.Build.0 = Debug|x64
+		{9306B1EF-42C3-4EBC-86D7-A689FB967709}.Release|x64.ActiveCfg = Release|x64
+		{9306B1EF-42C3-4EBC-86D7-A689FB967709}.Release|x64.Build.0 = Release|x64
+		{3A0B91B8-FD20-42FF-85BF-9F8A39DEE39D}.Debug|x64.ActiveCfg = Debug|x64
+		{3A0B91B8-FD20-42FF-85BF-9F8A39DEE39D}.Debug|x64.Build.0 = Debug|x64
+		{3A0B91B8-FD20-42FF-85BF-9F8A39DEE39D}.Release|x64.ActiveCfg = Release|x64
+		{3A0B91B8-FD20-42FF-85BF-9F8A39DEE39D}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {60AB78E9-BB32-460C-B081-CE767E48F962}
+	EndGlobalSection
+EndGlobal

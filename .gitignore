@@ -1,0 +1,9 @@
+vsproj/.vs
+vsproj/x64
+vsproj/bluenoise_forcedrandom/x64
+vsproj/bluenoise_voidncluster/x64
+*.filters
+*.pdb
+*.ilk
+*.iobj
+*.ipdb
