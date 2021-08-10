@@ -832,6 +832,8 @@ void write_to_disk( float64_t *rgba[4], const parms_shared_t &ps)
 		unsigned char* bytedata_tpdf = new unsigned char[4 * ps.image_siz * ps.image_siz];
 		float32_t* floatdata = new float32_t[4 * ps.image_siz * ps.image_siz];
 
+        float32_t floatmin =  FLT_MAX;
+        float32_t floatmax = -FLT_MAX;
 		for (int i = 0, n = ps.image_siz * ps.image_siz; i < n; ++i)
 		{
 			float64_t v_r = rgba[0][i];
@@ -844,11 +846,16 @@ void write_to_disk( float64_t *rgba[4], const parms_shared_t &ps)
 			float32_t vf_b = static_cast<float32_t>( v_b );
 			float32_t vf_a = static_cast<float32_t>( v_a );
 
-			floatdata[4 * i + 0] = vf_r;
-			floatdata[4 * i + 1] = vf_g;
-			floatdata[4 * i + 2] = vf_b;
-			floatdata[4 * i + 3] = vf_a;
+			//note: float values should be [0;1]
+			const float32_t rescale = static_cast<float32_t>(static_cast<float64_t>(ps.image_siz * ps.image_siz) / static_cast<float64_t>(ps.image_siz * ps.image_siz - 1) );
+			floatdata[4 * i + 0] = vf_r * rescale;
+			floatdata[4 * i + 1] = vf_g * rescale;
+			floatdata[4 * i + 2] = vf_b * rescale;
+			floatdata[4 * i + 3] = vf_a * rescale;
+			floatmin = min(floatmin, floatdata[4 * i + 0]); floatmin = min(floatmin, floatdata[4 * i + 1]); floatmin = min(floatmin, floatdata[4 * i + 2]); floatmin = min(floatmin, floatdata[4 * i + 3]);
+			floatmax = max(floatmax, floatdata[4 * i + 0]); floatmax = max(floatmax, floatdata[4 * i + 1]); floatmax = max(floatmax, floatdata[4 * i + 2]); floatmax = max(floatmax, floatdata[4 * i + 3]);
 
+			//note: [0;255], with equal number of pixels with each value
 			bytedata[4 * i + 0] = static_cast<uint8_t>(vf_r * 256.0f);
 			bytedata[4 * i + 1] = static_cast<uint8_t>(vf_g * 256.0f);
 			bytedata[4 * i + 2] = static_cast<uint8_t>(vf_b * 256.0f);
@@ -860,39 +867,39 @@ void write_to_disk( float64_t *rgba[4], const parms_shared_t &ps)
 			bytedata_tpdf[4 * i + 3] = static_cast<uint8_t>(remap_noise_tri_unity(vf_a) * 256.0f);
 		}
 
+		//note: check for uniformity in uniform distribution
+		{
+			//TODO: median?
+			int32_t histogram_buckets[256] = { 0 };
+			for (int i = 0, n = ps.image_siz * ps.image_siz; i < n; ++i)
+			{
+				uint8_t b = bytedata[4 * i + 0];
+				histogram_buckets[b] += 1;
+			}
+			int32_t mn = INT_MAX, mx = INT_MIN;
+			for (int i = 0, n = 256; i < n; ++i)
+			{
+				int32_t b = histogram_buckets[i];
+				mn = min(mn, b);
+				mx = max(mx, b);
+			}
+			printf("uniform histogram num-buckets: min=%d, max=%d\n", mn, mx);
+		}
+
 		{
 			char filename[512]; memset(filename, 0, 512);
 
 			sprintf_s(filename, 512, "bluenoise_vnc_%dx%d_uni_f%d_rnd%d.hdr", ps.image_siz, ps.image_siz, ps.filter_siz, ps.pct_random);
 			stbi_write_hdr(filename, ps.image_siz, ps.image_siz, 4, floatdata);
-			std::cout << "wrote " << filename << std::endl;
+			std::cout << "wrote \"" << filename << "\" (floatvalue, min: " << floatmin << ", max: " << floatmax << ")\n";
 
 			sprintf_s(filename, 512, "bluenoise_vnc_%dx%d_uni_f%d_rnd%d.bmp", ps.image_siz, ps.image_siz, ps.filter_siz, ps.pct_random);
 			stbi_write_bmp(filename, ps.image_siz, ps.image_siz, 4, bytedata);
-			std::cout << "wrote " << filename << std::endl;
+			std::cout << "wrote \"" << filename << "\"\n";
 
 			sprintf_s(filename, 512, "bluenoise_vnc_%dx%d_tri_f%d_rnd%d.bmp", ps.image_siz, ps.image_siz, ps.filter_siz, ps.pct_random);
 			stbi_write_bmp(filename, ps.image_siz, ps.image_siz, 4, bytedata_tpdf);
-			std::cout << "wrote " << filename << std::endl;
-		}
-
-		//note: check for uniformity in uniform distribution
-		{
-			//TODO: median?
-			int32_t histogram_buckets[256] = {0};
-			for ( int i = 0, n = ps.image_siz*ps.image_siz; i<n; ++i )
-			{
-				uint8_t b = bytedata[4*i+0];
-				histogram_buckets[b] += 1;
-			}
-			int32_t mn=INT_MAX, mx=INT_MIN;
-			for ( int i=0,n=256;i<n;++i)
-			{
-				int32_t b = histogram_buckets[i];
-				mn = min( mn, b );
-				mx = max( mx, b );
-			}
-			printf( "uniform histogram num-buckets: min=%d, max=%d\n", mn, mx );
+			std::cout << "wrote \"" << filename << "\"\n";
 		}
 
 		// note: debug histogram output
@@ -980,6 +987,8 @@ int main( int argc, char **argv )
 
 	if ( argc > 1 )
 		parms.image_siz = atoi( argv[1] );
+
+	std::cout << "calculating " << parms.image_siz << "x" << parms.image_siz << std::endl;
 
 	//DEBUG, single call
 	{

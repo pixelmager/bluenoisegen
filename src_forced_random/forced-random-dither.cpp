@@ -102,6 +102,15 @@ int32_t max( int32_t a, int32_t b )
 	return (a>b) ? a : b;
 }
 
+float32_t min(float32_t a, float32_t b)
+{
+	return (a < b) ? a : b;
+}
+float32_t max(float32_t a, float32_t b)
+{
+	return (a > b) ? a : b;
+}
+
 int32_t coord2idx( int x, int y, int32_t siz )
 {
 	assert(x < siz && y < siz );
@@ -327,18 +336,23 @@ void write_to_disk( float64_t const * const frd[4], const int32_t siz )
 {
 	const int32_t elemcount = siz * siz;
 
-	unsigned char* bytedata = new unsigned char[ 4 * elemcount ];
-	unsigned char* bytedata_tpdf = new unsigned char[ 4 * elemcount ];
-	float32_t *floatdata = new float32_t[ 4 * elemcount ];
+	unsigned char* const bytedata = new unsigned char[ 4LL * elemcount ];
+	unsigned char* const bytedata_tpdf = new unsigned char[ 4LL * elemcount ];
+	float32_t * const floatdata = new float32_t[ 4LL * elemcount ];
 
+    float32_t floatmin =  FLT_MAX;
+    float32_t floatmax = -FLT_MAX;
 	for ( int i = 0, n = elemcount; i<n; ++i )
 	{
 		for ( int c=0;c<4;++c)
 		{
-			float32_t vf = static_cast<float32_t>( frd[c][i] ) / static_cast<float32_t>( elemcount );
+			float32_t vf = static_cast<float32_t>( frd[c][i] ) / static_cast<float32_t>( elemcount - 1 ); //note: [0;1]
 			floatdata[4*i+c] = vf;
 			bytedata[4*i+c] = static_cast<uint8_t>( vf * 256.0f );
 			bytedata_tpdf[4*i+c] = static_cast<uint8_t>( remap_noise_tri_unity( vf ) * 256.0f );
+
+            floatmin = min( floatmin, vf );
+            floatmax = max( floatmax, vf );
 		}
 	}
 
@@ -364,15 +378,15 @@ void write_to_disk( float64_t const * const frd[4], const int32_t siz )
 
 	sprintf_s(filename, 512, "bluenoise_frd_%dx%d_uni.hdr", siz, siz);
 	stbi_write_hdr( filename, siz, siz, 4, floatdata);
-	std::cout << "wrote " << filename << std::endl;
+	std::cout << "wrote \"" << filename << "\" (floatvalue, min: " << floatmin << ", max: " << floatmax << ")\n";
 
 	sprintf_s(filename, 512, "bluenoise_frd_%dx%d_uni.bmp", siz, siz);
 	stbi_write_bmp(filename, siz, siz, 4, bytedata);
-	std::cout << "wrote " << filename << std::endl;
+	std::cout << "wrote \"" << filename << "\"\n";
 
 	sprintf_s(filename, 512, "bluenoise_frd_%dx%d_tri.bmp", siz, siz);
 	stbi_write_bmp(filename, siz, siz, 4, bytedata_tpdf);
-	std::cout << "wrote " << filename << std::endl;
+	std::cout << "wrote \"" << filename << "\"\n";
 
 	delete[] bytedata;
 	delete[] bytedata_tpdf;
@@ -385,6 +399,8 @@ int main( int argc, char **argv )
 	int32_t siz = 128;
 	if ( argc > 1 )
 		siz = atoi( argv[1] );
+
+	std::cout << "calculating " << siz << "x" << siz << std::endl;
 
 	float64_t *frd[4];
 	frd[0] = (float64_t*)_aligned_malloc( siz*siz*sizeof(float64_t), ALLOC_ALIGNMENT );
